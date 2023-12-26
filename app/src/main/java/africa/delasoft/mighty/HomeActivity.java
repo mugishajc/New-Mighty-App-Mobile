@@ -121,6 +121,10 @@ public class HomeActivity extends AppCompatActivity {
             case R.id.action_help:
                 Toast.makeText(this, "Please send support email at \nrwandadevelopmentteam@gmail.com", Toast.LENGTH_LONG).show();
                 return true;
+            case R.id.action_logout:
+                startActivity(new Intent(HomeActivity.this, SignInActivity.class));
+                this.finish();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
