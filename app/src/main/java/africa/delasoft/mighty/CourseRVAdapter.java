@@ -51,7 +51,7 @@ public class CourseRVAdapter extends ListAdapter<PhoneNumber, CourseRVAdapter.Vi
         // below line of code is use to set data to
         // each item of our recycler view.
         PhoneNumber model = getCourseAt(position);
-        holder.courseNameTV.setText(model.getPhoneNumber());
+        holder.courseNameTV.setText("#Inc "+model.getId());
     }
 
     // creating a method to get course modal for a specific position.
@@ -61,7 +61,7 @@ public class CourseRVAdapter extends ListAdapter<PhoneNumber, CourseRVAdapter.Vi
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         // view holder class to create a variable for each view.
-        TextView courseNameTV, courseDescTV, courseDurationTV;
+        TextView courseNameTV;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);

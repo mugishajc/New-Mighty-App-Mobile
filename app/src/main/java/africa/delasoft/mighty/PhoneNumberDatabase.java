@@ -40,8 +40,10 @@ public abstract class PhoneNumberDatabase extends RoomDatabase {
     };
 
     private static class PopulateDbAsyncTask extends AsyncTask<Void, Void, Void> {
+        private PhoneNumberDao dao;
+
         PopulateDbAsyncTask(PhoneNumberDatabase instance) {
-            PhoneNumberDao dao = instance.Dao();
+            dao = instance.Dao();
         }
 
         @Override
@@ -49,4 +51,5 @@ public abstract class PhoneNumberDatabase extends RoomDatabase {
             return null;
         }
     }
+
 }

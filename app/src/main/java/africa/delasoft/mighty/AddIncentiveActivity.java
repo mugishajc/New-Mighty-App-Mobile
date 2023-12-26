@@ -9,12 +9,11 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import africa.delasoft.mighty.data.model.PhoneNumber;
+
 public class AddIncentiveActivity extends AppCompatActivity {
     private Button btnAddNewIncentives;
     private EditText multiLineEditText;
-
-    public static final String EXTRA_COURSE_NAME = "africa.delasoft.mighty.EXTRA_COURSE_NAME";
-    public static final String EXTRA_ID = "africa.delasoft.mighty.EXTRA_ID";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,26 +42,49 @@ public class AddIncentiveActivity extends AppCompatActivity {
         });
 
     }
-
     private void saveCourse(String phoneNumbers) {
-        // inside this method we are passing
-        // all the data via an intent.
-        Intent data = new Intent();
-
-        // in below line we are passing all our course detail.
-        data.putExtra(EXTRA_COURSE_NAME, phoneNumbers);
-        int id = getIntent().getIntExtra(EXTRA_ID, -1);
-        if (id != -1) {
-            // in below line we are passing our id.
-            data.putExtra(EXTRA_ID, id);
+        if (phoneNumbers == null || phoneNumbers.trim().isEmpty()) {
+            // If the phoneNumbers is null or empty, show an error message
+            Toast.makeText(this, "Please enter valid phone numbers details.", Toast.LENGTH_SHORT).show();
+            return;
         }
 
-        // at last we are setting result as data.
-        setResult(RESULT_OK, data);
+        // Trim the phone number to remove leading and trailing whitespaces
+        String trimmedPhoneNumber = phoneNumbers.trim();
 
-        // displaying a toast message after adding the data
-        Toast.makeText(this, "PhoneNumbers has been saved to Room Database. Successfully!!", Toast.LENGTH_LONG).show();
+        // Create a PhoneNumber object with the given phone number
+        PhoneNumber phoneNumberObject = new PhoneNumber(trimmedPhoneNumber);
+
+        if (phoneNumberObject == null) {
+            // If the PhoneNumber object is null, show an error message
+            Toast.makeText(this, "Failed to create PhoneNumber object.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Insert the PhoneNumber object into the Room database
+        PhoneNumberDatabase database = PhoneNumberDatabase.getInstance(getApplicationContext());
+        if (database == null) {
+            // If the Room database is null, show an error message
+            Toast.makeText(this, "Failed to get Room database instance.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        PhoneNumberDao dao = database.Dao();
+        if (dao == null) {
+            // If the PhoneNumberDao is null, show an error message
+            Toast.makeText(this, "Failed to get PhoneNumberDao.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Insert the PhoneNumber object using AsyncTask to avoid running on the main thread
+        new InsertPhoneNumberAsyncTask(dao).execute(phoneNumberObject);
+
+        // Display a toast message after adding the data
+        Toast.makeText(this, "PhoneNumbers has been saved to the Local Database. Successfully!!", Toast.LENGTH_LONG).show();
+
+        // Reset the EditText field
         multiLineEditText.setText("");
     }
+
 
 }
