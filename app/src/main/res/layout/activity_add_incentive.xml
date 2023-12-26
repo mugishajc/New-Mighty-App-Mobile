@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+   android:padding="20dp"
+    android:orientation="vertical"
+    tools:context=".AddIncentiveActivity">
+
+    <EditText
+        android:id="@+id/multiLineEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="top|start"
+        android:hint="Paste numbers separated by comma,Please!!"
+        android:inputType="textMultiLine"
+        android:lines="10"/>
+
+
+    <Button
+        android:id="@+id/btnAddNewIncentives"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/yellow"
+        android:layout_marginTop="20dp"
+        android:text="create new"
+        android:textColor="@color/black"
+        />
+
+</LinearLayout>
