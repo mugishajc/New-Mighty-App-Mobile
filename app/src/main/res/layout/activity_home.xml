@@ -6,15 +6,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".MainActivity">
+    tools:context=".HomeActivity">
 
-    <!--recycler view to display our data-->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/idRVCourses"
+        android:layout_marginRight="15dp"
+        android:layout_marginLeft="15dp"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!--fab to add new courses-->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/idFABAdd"
         android:layout_width="wrap_content"
