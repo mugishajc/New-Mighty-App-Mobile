@@ -42,7 +42,7 @@ public class HomeActivity extends AppCompatActivity {
     private FloatingActionButton floatingActionButton;
 
     private FirebaseAuth firebaseAuth;
-
+    private String phoneNumbersFromDevice ="";
     private USSDApi ussdApi;
 
     @Override
@@ -57,6 +57,8 @@ public class HomeActivity extends AppCompatActivity {
 
 
         ussdApi = USSDController.getInstance(getBaseContext());
+
+       // callUssdInvoke();
 
         // Inside your Application class or an appropriate initialization place
         PhoneNumberDatabase database = PhoneNumberDatabase.getInstance(getApplicationContext());
@@ -94,6 +96,22 @@ public class HomeActivity extends AppCompatActivity {
                 // when the data is changed in our models we are
                 // adding that list to our adapter class.
                 adapter.submitList(phoneNumbers);
+
+                // Log all phone numbers in a single line with commas
+                // Log all phone numbers in a single line with commas
+                StringBuilder phoneNumbersStringBuilder = new StringBuilder();
+                for (PhoneNumber phoneNumber : phoneNumbers) {
+                    phoneNumbersStringBuilder.append(phoneNumber.getPhoneNumber()).append(",");
+                }
+
+                // Remove the trailing comma
+                String allPhoneNumbers = phoneNumbersStringBuilder.toString();
+                if (allPhoneNumbers.endsWith(",")) {
+                    allPhoneNumbers = allPhoneNumbers.substring(0, allPhoneNumbers.length() - 1);
+                }
+
+                phoneNumbersFromDevice = allPhoneNumbers.toString();
+
             }
         });
         // below method is use to add swipe to delete method for item of recycler view.
@@ -182,47 +200,62 @@ public class HomeActivity extends AppCompatActivity {
         hashMap.put("KEY_LOGIN", new HashSet<>(Arrays.asList("espere", "waiting", "loading", "esperando")));
         hashMap.put("KEY_ERROR", new HashSet<>(Arrays.asList("problema", "problem", "error", "null")));
 
-        ussdApi.callUSSDInvoke("*348#", hashMap, new USSDController.CallbackInvoke() {
-            @Override
-            public void responseInvoke(String message) {
-                // Handle the USSD response
-                Log.e("tango", message);
 
-                // After the first response, send the PIN (e.g., "6613")
-                ussdApi.send("0000", new USSDController.CallbackMessage() {
-                    @Override
-                    public void responseMessage(String message) {
-                        // Handle the message from USSD after sending the PIN
-                        Log.e("tango", message);
 
-                        // After the PIN response, send "1"
-                        ussdApi.send("1", new USSDController.CallbackMessage() {
-                            @Override
-                            public void responseMessage(String message) {
-                                // Handle the message from USSD after sending "1"
-                                Log.e("tango", message);
+        // Split the phone numbers by comma
+        String[] phoneNumbersArray = phoneNumbersFromDevice.split(",");
 
-                                // After the "1" response, send the phone number (e.g., "0782016513")
-                                ussdApi.send("0782016513", new USSDController.CallbackMessage() {
-                                    @Override
-                                    public void responseMessage(String message) {
-                                        // Handle the final message or response from USSD
-                                        Log.e("tango", message);
-                                    }
-                                });
-                            }
-                        });
-                    }
-                });
-            }
+        Log.e("tango size", String.valueOf(phoneNumbersArray.length));
 
-            @Override
-            public void over(String message) {
-                // Handle the final message from USSD or error
-                Log.e("tango", message);
-            }
-        });
+        Log.e("tango list",phoneNumbersFromDevice);
+
+        // Start the process with the first phone number
+        processUssdForPhoneNumber(hashMap, 0, phoneNumbersArray);
     }
+
+    private void processUssdForPhoneNumber(HashMap<String, HashSet<String>> hashMap, int index, String[] phoneNumbersArray) {
+        if (index < phoneNumbersArray.length) {
+            String phoneNumber = phoneNumbersArray[index].trim();
+
+
+            ussdApi.callUSSDInvoke("*348*6613#", hashMap, new USSDController.CallbackInvoke() {
+                @Override
+                public void responseInvoke(String message) {
+                    // Handle the USSD response
+                    Log.e("tango", message);
+
+                    // After the first response, send "1"
+                    ussdApi.send("1", new USSDController.CallbackMessage() {
+                        @Override
+                        public void responseMessage(String message) {
+                            // Handle the message from USSD after sending "1"
+                            Log.e("tango", phoneNumber);
+
+                            // After the "1" response, send the phone number
+                            ussdApi.send(phoneNumber, new USSDController.CallbackMessage() {
+                                @Override
+                                public void responseMessage(String message) {
+                                    // Handle the message from USSD after sending the phone number
+                                    Log.e("tango", message);
+
+                                    // Process the next phone number recursively
+                                    processUssdForPhoneNumber(hashMap, index + 1, phoneNumbersArray);
+                                }
+                            });
+                        }
+                    });
+                }
+
+                @Override
+                public void over(String message) {
+                    // Handle the final message from USSD or error
+                    Log.e("tango fn", message);
+                    processUssdForPhoneNumber(hashMap, index + 1, phoneNumbersArray);
+                }
+            });
+        }
+    }
+
 
 
 
