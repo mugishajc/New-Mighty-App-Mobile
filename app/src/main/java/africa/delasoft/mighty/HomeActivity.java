@@ -2,7 +2,9 @@ package africa.delasoft.mighty;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -20,8 +22,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
+import com.romellfudi.ussdlibrary.USSDApi;
+import com.romellfudi.ussdlibrary.USSDController;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import africa.delasoft.mighty.data.model.PhoneNumber;
 import africa.delasoft.mighty.ui.login.LoginActivity;
@@ -35,6 +43,7 @@ public class HomeActivity extends AppCompatActivity {
 
     private FirebaseAuth firebaseAuth;
 
+    private USSDApi ussdApi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,9 +51,12 @@ public class HomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_home);
          setTitle("        Mighty Dashboard");
 
-
+         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         firebaseAuth = FirebaseAuth.getInstance();
+
+
+        ussdApi = USSDController.getInstance(getBaseContext());
 
         // Inside your Application class or an appropriate initialization place
         PhoneNumberDatabase database = PhoneNumberDatabase.getInstance(getApplicationContext());
@@ -105,6 +117,7 @@ public class HomeActivity extends AppCompatActivity {
         adapter.setOnItemClickListener(new CourseRVAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(PhoneNumber model) {
+                callUssdInvoke();
                 Toast.makeText(HomeActivity.this, "clicked: "+model.getPhoneNumber()+"\n"+model.getId(), Toast.LENGTH_SHORT).show();
             }
         });
@@ -162,4 +175,58 @@ public class HomeActivity extends AppCompatActivity {
         dialog.show();
 
     }
+
+
+    private void callUssdInvoke() {
+        HashMap<String, HashSet<String>> hashMap = new HashMap<>();
+        hashMap.put("KEY_LOGIN", new HashSet<>(Arrays.asList("espere", "waiting", "loading", "esperando")));
+        hashMap.put("KEY_ERROR", new HashSet<>(Arrays.asList("problema", "problem", "error", "null")));
+
+        ussdApi.callUSSDInvoke("*348#", hashMap, new USSDController.CallbackInvoke() {
+            @Override
+            public void responseInvoke(String message) {
+                // Handle the USSD response
+                Log.e("tango", message);
+
+                // After the first response, send the PIN (e.g., "6613")
+                ussdApi.send("0000", new USSDController.CallbackMessage() {
+                    @Override
+                    public void responseMessage(String message) {
+                        // Handle the message from USSD after sending the PIN
+                        Log.e("tango", message);
+
+                        // After the PIN response, send "1"
+                        ussdApi.send("1", new USSDController.CallbackMessage() {
+                            @Override
+                            public void responseMessage(String message) {
+                                // Handle the message from USSD after sending "1"
+                                Log.e("tango", message);
+
+                                // After the "1" response, send the phone number (e.g., "0782016513")
+                                ussdApi.send("0782016513", new USSDController.CallbackMessage() {
+                                    @Override
+                                    public void responseMessage(String message) {
+                                        // Handle the final message or response from USSD
+                                        Log.e("tango", message);
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+
+            @Override
+            public void over(String message) {
+                // Handle the final message from USSD or error
+                Log.e("tango", message);
+            }
+        });
+    }
+
+
+
+
+
+
 }
