@@ -1,5 +1,6 @@
 package africa.delasoft.mighty;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
@@ -9,6 +10,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
@@ -17,6 +19,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.List;
 
@@ -30,14 +33,18 @@ public class HomeActivity extends AppCompatActivity {
     private ViewModal viewmodal;
     private FloatingActionButton floatingActionButton;
 
+    private FirebaseAuth firebaseAuth;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-         setTitle("       Mighty Dashboard");
+         setTitle("        Mighty Dashboard");
 
 
+
+        firebaseAuth = FirebaseAuth.getInstance();
 
         // Inside your Application class or an appropriate initialization place
         PhoneNumberDatabase database = PhoneNumberDatabase.getInstance(getApplicationContext());
@@ -122,11 +129,37 @@ public class HomeActivity extends AppCompatActivity {
                 Toast.makeText(this, "Please send support email at \nrwandadevelopmentteam@gmail.com", Toast.LENGTH_LONG).show();
                 return true;
             case R.id.action_logout:
-                startActivity(new Intent(HomeActivity.this, SignInActivity.class));
-                this.finish();
+                showLogoutConfirmationDialog();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+
+    private void showLogoutConfirmationDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Attention !!!");
+        builder.setMessage("Logout Confirmation \n Are you sure you want to log out?");
+        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                firebaseAuth.signOut();
+                startActivity(new Intent(HomeActivity.this, SignInActivity.class));
+                finish();
+            }
+        });
+        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+            }
+        });
+
+        builder.setCancelable(false);
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
     }
 }

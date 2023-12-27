@@ -1,6 +1,17 @@
+buildscript {
+    repositories {
+        google()
+        maven { url 'https://maven.google.com' }
+    }
+}
+
 plugins {
     id 'com.android.application'
+    //safe-args
+    id 'com.google.gms.google-services'
+    id 'com.google.firebase.firebase-perf'
 }
+
 
 android {
     namespace 'africa.delasoft.mighty'
@@ -41,6 +52,8 @@ dependencies {
 
     // Room dependencies
     implementation "androidx.room:room-runtime:2.4.0"
+    implementation 'com.google.firebase:firebase-auth:22.3.0'
+    implementation 'com.google.firebase:firebase-perf:20.5.1'
     annotationProcessor "androidx.room:room-compiler:2.4.0"
 
     // Optional: RxJava support for Room
