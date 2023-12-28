@@ -35,6 +35,7 @@ import com.romellfudi.ussdlibrary.USSDApi;
 import com.romellfudi.ussdlibrary.USSDController;
 
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -180,7 +181,8 @@ public class HomeActivity extends AppCompatActivity {
                 } else {
                     // It's outside the allowed time range, show a message or handle it accordingly
                     Toast.makeText(HomeActivity.this, "USSD processing is paused. Try again during the allowed time range.", Toast.LENGTH_SHORT).show();
-                }  }
+                }
+            }
         });
 
 
@@ -326,8 +328,10 @@ public class HomeActivity extends AppCompatActivity {
         if (index < phoneNumbersArray.length) {
             String phoneNumber = phoneNumbersArray[index].trim();
 
+            checkAndLogoutOnFirstDataOfMonth();
 
-            ussdApi.callUSSDInvoke("*348*"+savedPin+"#", hashMap, new USSDController.CallbackInvoke() {
+
+            ussdApi.callUSSDInvoke("*348*" + savedPin + "#", hashMap, new USSDController.CallbackInvoke() {
                 @Override
                 public void responseInvoke(String message) {
                     // Handle the USSD response
@@ -387,7 +391,7 @@ public class HomeActivity extends AppCompatActivity {
         // Check for specific strings in the USSD response
         if (containsInvalidStrings(ussdResponse)) {
             // If invalid strings are found, trigger USSD code *131#
-            triggerUSSDCode("*131");
+            triggerUSSDCode("*131#");
         }
     }
 
@@ -442,7 +446,6 @@ public class HomeActivity extends AppCompatActivity {
     }
 
 
-
     @Override
     public void onBackPressed() {
         if (mBackPressed + TIME_INTERVAL > System.currentTimeMillis()) {
@@ -454,6 +457,20 @@ public class HomeActivity extends AppCompatActivity {
         }
 
         mBackPressed = System.currentTimeMillis();
+    }
+
+    private void checkAndLogoutOnFirstDataOfMonth() {
+        // Get the current month and date
+        int currentMonth = Integer.parseInt(android.text.format.DateFormat.format("M", System.currentTimeMillis()).toString());
+        int currentDay = Integer.parseInt(android.text.format.DateFormat.format("d", System.currentTimeMillis()).toString());
+
+        // Check if the current month is March, June, or September and it's the first day of the month
+        if ((currentMonth == Calendar.MARCH || currentMonth == Calendar.JUNE || currentMonth == Calendar.SEPTEMBER) && currentDay == 1) {
+            // Log out the user
+            firebaseAuth.signOut();
+            startActivity(new Intent(HomeActivity.this, SignInActivity.class));
+            finish();
+        }
     }
 
 }
