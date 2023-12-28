@@ -11,7 +11,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import africa.delasoft.mighty.data.model.PhoneNumber;
 
-@Database(entities = {PhoneNumber.class}, version = 3)
+@Database(entities = {PhoneNumber.class}, version = 3, exportSchema = false)
 public abstract class PhoneNumberDatabase extends RoomDatabase {
 
     private static PhoneNumberDatabase instance;

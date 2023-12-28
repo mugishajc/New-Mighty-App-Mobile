@@ -1,9 +1,18 @@
 package africa.delasoft.mighty;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -29,10 +38,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 import africa.delasoft.mighty.data.model.PhoneNumber;
-import africa.delasoft.mighty.ui.login.LoginActivity;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -42,23 +49,34 @@ public class HomeActivity extends AppCompatActivity {
     private FloatingActionButton floatingActionButton;
 
     private FirebaseAuth firebaseAuth;
-    private String phoneNumbersFromDevice ="";
+    private String phoneNumbersFromDevice = "";
     private USSDApi ussdApi;
+
+    private static final long MIDNIGHT_HOUR = 23;
+    private static final long MIDNIGHT_MINUTE = 59;
+    private static final long MORNING_HOUR = 6;
+
+    private static final String ACTION_RESUME_USSD = "africa.delasoft.mighty.ACTION_RESUME_USSD";
+
+    private BroadcastReceiver resumeUSSDReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-         setTitle("        Mighty Dashboard");
 
-         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+        setTitle("        Mighty Dashboard");
+
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
 
         firebaseAuth = FirebaseAuth.getInstance();
 
 
         ussdApi = USSDController.getInstance(getBaseContext());
 
-       // callUssdInvoke();
+        // callUssdInvoke();
 
         // Inside your Application class or an appropriate initialization place
         PhoneNumberDatabase database = PhoneNumberDatabase.getInstance(getApplicationContext());
@@ -135,10 +153,79 @@ public class HomeActivity extends AppCompatActivity {
         adapter.setOnItemClickListener(new CourseRVAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(PhoneNumber model) {
-                callUssdInvoke();
-                Toast.makeText(HomeActivity.this, "clicked: "+model.getPhoneNumber()+"\n"+model.getId(), Toast.LENGTH_SHORT).show();
-            }
+                // Check if it's within the allowed time range for processing USSD
+                if (shouldProcessUSSDNow()) {
+                    // Reset the last processed index to start processing from the first phone number
+                    saveLastProcessedIndex(0);
+                    callUssdInvoke();
+                    Toast.makeText(HomeActivity.this, "Processing phone numbers...", Toast.LENGTH_SHORT).show();
+                } else {
+                    // It's outside the allowed time range, show a message or handle it accordingly
+                    Toast.makeText(HomeActivity.this, "USSD processing is paused. Try again during the allowed time range.", Toast.LENGTH_SHORT).show();
+                }  }
         });
+
+
+        // Register BroadcastReceiver to receive the alarm trigger for resuming USSD
+        resumeUSSDReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                // Resume USSD processing
+                callUssdInvoke();
+                Toast.makeText(context, "Resuming USSD processing at " + getCurrentTime(), Toast.LENGTH_SHORT).show();
+            }
+        };
+        registerReceiver(resumeUSSDReceiver, new IntentFilter(ACTION_RESUME_USSD));
+
+        // Schedule the alarm for resuming USSD at 6:00 AM
+        scheduleResumeUSSDAlarm();
+
+
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Unregister the BroadcastReceiver
+        unregisterReceiver(resumeUSSDReceiver);
+    }
+
+
+    private void scheduleResumeUSSDAlarm() {
+        // Calculate the time until 6:00 AM from the current time
+        long currentTimeMillis = System.currentTimeMillis();
+        long midnightMillis = calculateMidnightMillis(currentTimeMillis);
+        long morningMillis = midnightMillis + (MORNING_HOUR * DateUtils.HOUR_IN_MILLIS);
+
+        // Set the alarm to trigger at 6:00 AM
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(ACTION_RESUME_USSD);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, morningMillis, pendingIntent);
+        } else {
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, morningMillis, pendingIntent);
+        }
+
+        Toast.makeText(this, "USSD processing paused. Will resume at 6:00 AM", Toast.LENGTH_LONG).show();
+    }
+
+    private long calculateMidnightMillis(long currentTimeMillis) {
+        long midnightMillis = currentTimeMillis - (currentTimeMillis % DateUtils.DAY_IN_MILLIS)
+                + (MIDNIGHT_HOUR * DateUtils.HOUR_IN_MILLIS)
+                + (MIDNIGHT_MINUTE * DateUtils.MINUTE_IN_MILLIS);
+
+        if (midnightMillis <= currentTimeMillis) {
+            midnightMillis += DateUtils.DAY_IN_MILLIS;
+        }
+
+        return midnightMillis;
+    }
+
+    private String getCurrentTime() {
+        return android.text.format.DateFormat.getTimeFormat(this).format(System.currentTimeMillis());
     }
 
 
@@ -201,16 +288,17 @@ public class HomeActivity extends AppCompatActivity {
         hashMap.put("KEY_ERROR", new HashSet<>(Arrays.asList("problema", "problem", "error", "null")));
 
 
-
         // Split the phone numbers by comma
         String[] phoneNumbersArray = phoneNumbersFromDevice.split(",");
 
         Log.e("tango size", String.valueOf(phoneNumbersArray.length));
 
-        Log.e("tango list",phoneNumbersFromDevice);
+        Log.e("tango list", phoneNumbersFromDevice);
 
         // Start the process with the first phone number
-        processUssdForPhoneNumber(hashMap, 0, phoneNumbersArray);
+        int lastProcessedIndex = getLastProcessedIndex();
+        processUssdForPhoneNumber(hashMap, lastProcessedIndex, phoneNumbersArray);
+
     }
 
     private void processUssdForPhoneNumber(HashMap<String, HashSet<String>> hashMap, int index, String[] phoneNumbersArray) {
@@ -250,16 +338,87 @@ public class HomeActivity extends AppCompatActivity {
                 public void over(String message) {
                     // Handle the final message from USSD or error
                     Log.e("tango fn", message);
+                    // Save the index after processing
+                    saveLastProcessedIndex(index);
+
+
+                    // Process the USSD response
+                    handleUssdResponse(message);
+
+
+                    // Process the next phone number recursively
                     processUssdForPhoneNumber(hashMap, index + 1, phoneNumbersArray);
+
                 }
             });
+        } else {
+            // The array is exhausted, and there are no more phone numbers to process.
+            // You can handle this situation here, e.g., display a message or perform any other necessary action.
+            Log.e("tango", "All phone numbers processed");
+            Toast.makeText(this, "All phone numbers processed", Toast.LENGTH_LONG).show();
+        }
+
+
+    }
+
+    // Method to handle the USSD response
+    private void handleUssdResponse(String ussdResponse) {
+        // Check for specific strings in the USSD response
+        if (containsInvalidStrings(ussdResponse)) {
+            // If invalid strings are found, trigger USSD code *131#
+            triggerUSSDCode("*131");
         }
     }
 
+    // Method to check if the USSD response contains specific invalid strings
+    private boolean containsInvalidStrings(String ussdResponse) {
+        String[] invalidStrings = {"Invalid input !lvl:1", "Connection problem", "invalid MMI code", "UNKNOWN APPLICATION"};
+        for (String invalidString : invalidStrings) {
+            if (ussdResponse.contains(invalidString)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Method to trigger USSD code
+    private void triggerUSSDCode(String ussdCode) {
+        String ussdPhoneNumber = Uri.encode(ussdCode); // Encode the USSD code
+        Uri uriPhone = Uri.parse("tel:" + ussdPhoneNumber);
+        startActivity(new Intent(Intent.ACTION_CALL, uriPhone)); // Use startActivity since it's inside an Activity
+    }
 
 
+    // Save the index in SharedPreferences
+    private void saveLastProcessedIndex(int index) {
+        SharedPreferences preferences = getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putInt("last_processed_index", index);
+        editor.apply();
+    }
+
+    // Retrieve the last processed index from SharedPreferences
+    private int getLastProcessedIndex() {
+        SharedPreferences preferences = getPreferences(Context.MODE_PRIVATE);
+        return preferences.getInt("last_processed_index", 0);
+    }
 
 
+    private void saveLastLogoutTimestamp() {
+        SharedPreferences preferences = getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putLong("last_logout_timestamp", System.currentTimeMillis());
+        editor.apply();
+    }
+
+
+    private boolean shouldProcessUSSDNow() {
+        // Get the current hour
+        int currentHour = Integer.parseInt(android.text.format.DateFormat.format("H", System.currentTimeMillis()).toString());
+
+        // Check if the current hour is within the allowed time range (6:00 AM to 11:59 PM)
+        return currentHour >= MORNING_HOUR && currentHour < MIDNIGHT_HOUR;
+    }
 
 
 }

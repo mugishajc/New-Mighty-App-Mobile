@@ -13,7 +13,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.Firebase;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
@@ -21,7 +20,7 @@ import com.google.firebase.auth.FirebaseUser;
 
 public class SignInActivity extends AppCompatActivity {
 
-    private EditText editTextEmail,editTextPassword;
+    private EditText editTextEmail, editTextPassword;
     private Button btnLogin;
     private FirebaseAuth firebaseAuth;
     private ProgressDialog progressDialog;
@@ -66,12 +65,15 @@ public class SignInActivity extends AppCompatActivity {
                 }
 
                 progressDialog.show();
-                firebaseAuth.signInWithEmailAndPassword(email,password)
+                firebaseAuth.signInWithEmailAndPassword(email, password)
                         .addOnCompleteListener(SignInActivity.this, new OnCompleteListener<AuthResult>() {
                             @Override
                             public void onComplete(@NonNull Task<AuthResult> task) {
                                 progressDialog.dismiss();
+                                // Inside the successful login block
+                                // Inside the successful login block
                                 if (task.isSuccessful()) {
+                                    // Capture the current time
                                     startActivity(new Intent(SignInActivity.this, HomeActivity.class));
                                     finish();
                                 } else {
@@ -86,7 +88,6 @@ public class SignInActivity extends AppCompatActivity {
             }
         });
     }
-
 
 
 }
