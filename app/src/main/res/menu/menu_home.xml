@@ -6,6 +6,10 @@
         app:showAsAction="always"
         android:icon="@drawable/ic_baseline_library_add_24"/>
     <item
+        android:id="@+id/action_setPin"
+        android:title="Set PIN"
+        app:showAsAction="never"/>
+    <item
         android:id="@+id/action_help"
         android:title="Help"
         app:showAsAction="never"/>

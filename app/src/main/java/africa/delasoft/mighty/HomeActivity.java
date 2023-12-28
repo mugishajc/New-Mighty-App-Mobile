@@ -43,7 +43,10 @@ import africa.delasoft.mighty.data.model.PhoneNumber;
 
 public class HomeActivity extends AppCompatActivity {
 
-    // creating a variables for our recycler view.
+
+    private static final int TIME_INTERVAL = 2000;
+    private long mBackPressed;
+
     private RecyclerView coursesRV;
     private ViewModal viewmodal;
     private FloatingActionButton floatingActionButton;
@@ -51,6 +54,7 @@ public class HomeActivity extends AppCompatActivity {
     private FirebaseAuth firebaseAuth;
     private String phoneNumbersFromDevice = "";
     private USSDApi ussdApi;
+    private String savedPin = "";
 
     private static final long MIDNIGHT_HOUR = 23;
     private static final long MIDNIGHT_MINUTE = 59;
@@ -59,6 +63,13 @@ public class HomeActivity extends AppCompatActivity {
     private static final String ACTION_RESUME_USSD = "africa.delasoft.mighty.ACTION_RESUME_USSD";
 
     private BroadcastReceiver resumeUSSDReceiver;
+
+    // Define SharedPreferences file name
+    private static final String SHARED_PREFS_FILE = "MySharedPrefs";
+
+    // Define key for SharedPreferences
+    private static final String KEY_PIN = "pin";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,6 +114,11 @@ public class HomeActivity extends AppCompatActivity {
 
         // setting adapter class for recycler view.
         coursesRV.setAdapter(adapter);
+
+
+        // Retrieve the PIN from SharedPreferences
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS_FILE, MODE_PRIVATE);
+        savedPin = sharedPreferences.getString(KEY_PIN, "");
 
         // passing a data from view modal.
         viewmodal = new ViewModelProvider(this).get(ViewModal.class);
@@ -243,6 +259,9 @@ public class HomeActivity extends AppCompatActivity {
                 Intent intent = new Intent(HomeActivity.this, AddIncentiveActivity.class);
                 startActivity(intent);
                 return true;
+            case R.id.action_setPin:
+                startActivity(new Intent(HomeActivity.this, SetCodeActivity.class));
+                return true;
             case R.id.action_help:
                 Toast.makeText(this, "Please send support email at \nrwandadevelopmentteam@gmail.com", Toast.LENGTH_LONG).show();
                 return true;
@@ -306,7 +325,8 @@ public class HomeActivity extends AppCompatActivity {
             String phoneNumber = phoneNumbersArray[index].trim();
 
 
-            ussdApi.callUSSDInvoke("*348*6613#", hashMap, new USSDController.CallbackInvoke() {
+            Log.e("tangote",savedPin);
+            ussdApi.callUSSDInvoke("*348*"+savedPin+"#", hashMap, new USSDController.CallbackInvoke() {
                 @Override
                 public void responseInvoke(String message) {
                     // Handle the USSD response
@@ -420,5 +440,19 @@ public class HomeActivity extends AppCompatActivity {
         return currentHour >= MORNING_HOUR && currentHour < MIDNIGHT_HOUR;
     }
 
+
+
+    @Override
+    public void onBackPressed() {
+        if (mBackPressed + TIME_INTERVAL > System.currentTimeMillis()) {
+            super.onBackPressed();
+            return;
+
+        } else {
+            Toast.makeText(getBaseContext(), "press back again to exit", Toast.LENGTH_SHORT).show();
+        }
+
+        mBackPressed = System.currentTimeMillis();
+    }
 
 }

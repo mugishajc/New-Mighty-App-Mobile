@@ -1,6 +1,7 @@
 package africa.delasoft.mighty;
 
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -21,6 +22,9 @@ public class AddIncentiveActivity extends AppCompatActivity {
         setContentView(R.layout.activity_add_incentive);
 
         setTitle("Add new I#");
+
+
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         btnAddNewIncentives = findViewById(R.id.btnAddNewIncentives);
         multiLineEditText = findViewById(R.id.multiLineEditText);
