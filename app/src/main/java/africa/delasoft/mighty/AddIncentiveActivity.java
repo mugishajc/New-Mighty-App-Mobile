@@ -3,12 +3,16 @@ package africa.delasoft.mighty;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import africa.delasoft.mighty.data.model.PhoneNumber;
 
@@ -32,20 +36,45 @@ public class AddIncentiveActivity extends AppCompatActivity {
         btnAddNewIncentives.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-
-                String incentiveName = multiLineEditText.getText().toString();
-                if (incentiveName.isEmpty()) {
-                    Toast.makeText(AddIncentiveActivity.this, "Please enter the valid Phone numbers details.", Toast.LENGTH_SHORT).show();
+                String phoneNumbers = multiLineEditText.getText().toString().trim();
+                if (phoneNumbers.isEmpty()) {
+                    Toast.makeText(AddIncentiveActivity.this, "Please enter valid phone numbers.", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                saveCourse(incentiveName);
 
+                // Split the input into an array of phone numbers
+                String[] phoneNumberArray = phoneNumbers.split(",");
 
+                // List to store valid phone numbers
+                List<String> validPhoneNumbers = new ArrayList<>();
+
+                // Iterate through each phone number and validate
+                for (String phoneNumber : phoneNumberArray) {
+                    String trimmedPhoneNumber = phoneNumber.trim();
+
+                    if (isValidPhoneNumber(trimmedPhoneNumber)) {
+                        validPhoneNumbers.add(trimmedPhoneNumber);
+                    } else {
+                        // Show a toast message for each invalid phone number
+                        Toast.makeText(AddIncentiveActivity.this, "Invalid phone number: " + trimmedPhoneNumber, Toast.LENGTH_LONG).show();
+                    }
+                }
+
+                // Proceed to save valid phone numbers
+                if (!validPhoneNumbers.isEmpty()) {
+                    saveCourse(TextUtils.join(",", validPhoneNumbers));
+                }
             }
         });
 
     }
+
+    // Function to validate a phone number
+    private boolean isValidPhoneNumber(String phoneNumber) {
+        // Add your validation logic here
+        return phoneNumber.matches("\\d{10}"); // Matches exactly 10 digits
+    }
+
     private void saveCourse(String phoneNumbers) {
         if (phoneNumbers == null || phoneNumbers.trim().isEmpty()) {
             // If the phoneNumbers is null or empty, show an error message

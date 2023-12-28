@@ -8,7 +8,8 @@
     <item
         android:id="@+id/action_setPin"
         android:title="Set PIN"
-        app:showAsAction="never"/>
+        app:showAsAction="ifRoom"
+        android:icon="@drawable/ic_baseline_security_24"/>
     <item
         android:id="@+id/action_help"
         android:title="Help"

@@ -171,6 +171,8 @@ public class HomeActivity extends AppCompatActivity {
             public void onItemClick(PhoneNumber model) {
                 // Check if it's within the allowed time range for processing USSD
                 if (shouldProcessUSSDNow()) {
+                    Log.e("ClickedData", "Clicked on item with phone number: " + model.getPhoneNumber());
+
                     // Reset the last processed index to start processing from the first phone number
                     saveLastProcessedIndex(0);
                     callUssdInvoke();
@@ -325,7 +327,6 @@ public class HomeActivity extends AppCompatActivity {
             String phoneNumber = phoneNumbersArray[index].trim();
 
 
-            Log.e("tangote",savedPin);
             ussdApi.callUSSDInvoke("*348*"+savedPin+"#", hashMap, new USSDController.CallbackInvoke() {
                 @Override
                 public void responseInvoke(String message) {
