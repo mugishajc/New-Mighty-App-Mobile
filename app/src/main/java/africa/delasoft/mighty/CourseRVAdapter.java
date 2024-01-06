@@ -1,5 +1,12 @@
 package africa.delasoft.mighty;
 
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.style.AbsoluteSizeSpan;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -55,12 +62,25 @@ public class CourseRVAdapter extends ListAdapter<PhoneNumber, CourseRVAdapter.Vi
 
 
         String phoneNumber = model.getPhoneNumber();
+        String courseId = "#Inc " + model.getId();
+
         if (phoneNumber != null && phoneNumber.length() >= 6) {
             String firstSixDigits = phoneNumber.substring(0, 6);
-            holder.courseNameTV.setText("#Inc "+model.getId() +" : "+firstSixDigits);
-        }else{
-            holder.courseNameTV.setText("#Inc "+model.getId());
+
+            SpannableStringBuilder builder = new SpannableStringBuilder();
+            builder.append(courseId).append(" : ").append(firstSixDigits);
+
+            // Apply styles to firstSixDigits
+            StyleSpan boldSpan = new StyleSpan(Typeface.BOLD);
+            ForegroundColorSpan colorSpan = new ForegroundColorSpan(Color.BLACK);
+            builder.setSpan(boldSpan, courseId.length() + 3, builder.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+            builder.setSpan(new AbsoluteSizeSpan(16, true), courseId.length() + 3, builder.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+
+            holder.courseNameTV.setText(builder);
+        } else {
+            holder.courseNameTV.setText(courseId);
         }
+
 
 
     }
