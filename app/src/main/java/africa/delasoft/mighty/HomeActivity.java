@@ -9,9 +9,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.Menu;
@@ -44,6 +45,11 @@ import africa.delasoft.mighty.data.model.PhoneNumber;
 
 public class HomeActivity extends AppCompatActivity {
 
+
+    private static final long USSD_TIMEOUT_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+    private Handler ussdTimeoutHandler = new Handler(Looper.getMainLooper());
+    private Runnable ussdTimeoutRunnable;
 
     private static final int TIME_INTERVAL = 2000;
     private long mBackPressed;
@@ -172,12 +178,16 @@ public class HomeActivity extends AppCompatActivity {
             public void onItemClick(PhoneNumber model) {
                 // Check if it's within the allowed time range for processing USSD
                 if (shouldProcessUSSDNow()) {
-                    Log.e("ClickedData", "Clicked on item with phone number: " + model.getPhoneNumber());
+                  //  Log.e("ClickedData", "Clicked on item with phone number: " + model.getPhoneNumber());
 
                     // Reset the last processed index to start processing from the first phone number
                     saveLastProcessedIndex(0);
                     callUssdInvoke();
                     Toast.makeText(HomeActivity.this, "Processing phone numbers...", Toast.LENGTH_SHORT).show();
+
+                    // Schedule a timeout handler to check if 5 minutes have passed without processing
+                    scheduleUSSDTimeout();
+
                 } else {
                     // It's outside the allowed time range, show a message or handle it accordingly
                     Toast.makeText(HomeActivity.this, "USSD processing is paused. Try again during the allowed time range.", Toast.LENGTH_SHORT).show();
@@ -211,6 +221,27 @@ public class HomeActivity extends AppCompatActivity {
         unregisterReceiver(resumeUSSDReceiver);
     }
 
+
+    private void scheduleUSSDTimeout() {
+        ussdTimeoutRunnable = new Runnable() {
+            @Override
+            public void run() {
+                // Timeout occurred, call USSD processing
+                saveLastProcessedIndex(0);
+                callUssdInvoke();
+                Toast.makeText(HomeActivity.this, "Resuming USSD processing due to timeout", Toast.LENGTH_SHORT).show();
+            }
+        };
+
+        ussdTimeoutHandler.postDelayed(ussdTimeoutRunnable, USSD_TIMEOUT_INTERVAL);
+    }
+
+
+    private void cancelUSSDTimeout() {
+        if (ussdTimeoutRunnable != null) {
+            ussdTimeoutHandler.removeCallbacks(ussdTimeoutRunnable);
+        }
+    }
 
     private void scheduleResumeUSSDAlarm() {
         // Calculate the time until 6:00 AM from the current time
@@ -314,9 +345,9 @@ public class HomeActivity extends AppCompatActivity {
         // Split the phone numbers by comma
         String[] phoneNumbersArray = phoneNumbersFromDevice.split(",");
 
-        Log.e("tango size", String.valueOf(phoneNumbersArray.length));
+        // Log.e("tango size", String.valueOf(phoneNumbersArray.length));
 
-        Log.e("tango list", phoneNumbersFromDevice);
+        //Log.e("tango list", phoneNumbersFromDevice);
 
         // Start the process with the first phone number
         int lastProcessedIndex = getLastProcessedIndex();
@@ -335,21 +366,27 @@ public class HomeActivity extends AppCompatActivity {
                 @Override
                 public void responseInvoke(String message) {
                     // Handle the USSD response
-                    Log.e("tango", message);
+                    //  Log.e("tango", message);
 
                     // After the first response, send "1"
                     ussdApi.send("1", new USSDController.CallbackMessage() {
                         @Override
                         public void responseMessage(String message) {
                             // Handle the message from USSD after sending "1"
-                            Log.e("tango", phoneNumber);
+                            //  Log.e("tango", phoneNumber);
 
                             // After the "1" response, send the phone number
                             ussdApi.send(phoneNumber, new USSDController.CallbackMessage() {
                                 @Override
                                 public void responseMessage(String message) {
                                     // Handle the message from USSD after sending the phone number
-                                    Log.e("tango", message);
+                                    //  Log.e("tango", message);
+
+                                    // Save the index after processing
+                                    saveLastProcessedIndex(index);
+
+                                    // Process the USSD response
+                                    handleUssdResponse(message);
 
                                     // Process the next phone number recursively
                                     processUssdForPhoneNumber(hashMap, index + 1, phoneNumbersArray);
@@ -362,7 +399,7 @@ public class HomeActivity extends AppCompatActivity {
                 @Override
                 public void over(String message) {
                     // Handle the final message from USSD or error
-                    Log.e("tango fn", message);
+                    // Log.e("tango fn", message);
                     // Save the index after processing
                     saveLastProcessedIndex(index);
 
@@ -376,10 +413,18 @@ public class HomeActivity extends AppCompatActivity {
 
                 }
             });
+
+            // Reset the USSD timeout when processing a new phone number
+            cancelUSSDTimeout();
+            scheduleUSSDTimeout();
+
         } else {
+            // All phone numbers processed, cancel the USSD timeout
+            cancelUSSDTimeout();
+
             // The array is exhausted, and there are no more phone numbers to process.
             // You can handle this situation here, e.g., display a message or perform any other necessary action.
-            Log.e("tango", "All phone numbers processed");
+            //    Log.e("tango", "All phone numbers processed");
             Toast.makeText(this, "All phone numbers processed", Toast.LENGTH_LONG).show();
         }
 
@@ -398,19 +443,40 @@ public class HomeActivity extends AppCompatActivity {
     // Method to check if the USSD response contains specific invalid strings
     private boolean containsInvalidStrings(String ussdResponse) {
         String[] invalidStrings = {"Invalid input !lvl:1", "Connection problem", "invalid MMI code", "UNKNOWN APPLICATION", "Mobile network not available"};
+
+        // Remove spaces from the USSD response for accurate matching
+        ussdResponse = ussdResponse.replaceAll("\\s", "");
+
         for (String invalidString : invalidStrings) {
-            if (ussdResponse.contains(invalidString)) {
+            // Remove spaces from the invalid string for accurate matching
+            String trimmedInvalidString = invalidString.replaceAll("\\s", "");
+
+            if (ussdResponse.contains(trimmedInvalidString)) {
                 return true;
             }
         }
         return false;
     }
 
+
     // Method to trigger USSD code
     private void triggerUSSDCode(String ussdCode) {
-        String ussdPhoneNumber = Uri.encode(ussdCode); // Encode the USSD code
-        Uri uriPhone = Uri.parse("tel:" + ussdPhoneNumber);
-        startActivity(new Intent(Intent.ACTION_CALL, uriPhone)); // Use startActivity since it's inside an Activity
+        // String ussdPhoneNumber = Uri.encode(ussdCode); // Encode the USSD code
+        // Uri uriPhone = Uri.parse("tel:" + ussdPhoneNumber);
+        //  startActivity(new Intent(Intent.ACTION_CALL, uriPhone)); // Use startActivity since it's inside an Activity
+
+        ussdApi.callUSSDInvoke("*131#", new HashMap<>(), new USSDController.CallbackInvoke() {
+            @Override
+            public void responseInvoke(String message) {
+
+            }
+
+            @Override
+            public void over(String message) {
+            }
+        });
+
+
     }
 
 
