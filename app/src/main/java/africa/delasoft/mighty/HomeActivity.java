@@ -67,6 +67,7 @@ public class HomeActivity extends AppCompatActivity {
     private static final long MIDNIGHT_MINUTE = 59;
     private static final long MORNING_HOUR = 6;
 
+
     private static final String ACTION_RESUME_USSD = "africa.delasoft.mighty.ACTION_RESUME_USSD";
 
     private BroadcastReceiver resumeUSSDReceiver;
@@ -93,6 +94,12 @@ public class HomeActivity extends AppCompatActivity {
 
 
         ussdApi = USSDController.getInstance(getBaseContext());
+
+
+
+        // Check and request WRITE_SETTINGS permission if needed
+        AirplaneModeUtils.checkAndRequestWriteSettingsPermission(this);
+
 
         // callUssdInvoke();
 
@@ -256,12 +263,23 @@ public class HomeActivity extends AppCompatActivity {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, morningMillis, pendingIntent);
+
+            // Enable airplane mode if it's outside the allowed time range
+            if (currentTimeMillis >= morningMillis) {
+                AirplaneModeUtils.enableAirplaneMode(this);
+            }
         } else {
             alarmManager.setExact(AlarmManager.RTC_WAKEUP, morningMillis, pendingIntent);
+
+            // Enable airplane mode if it's outside the allowed time range
+            if (currentTimeMillis >= morningMillis) {
+                AirplaneModeUtils.enableAirplaneMode(this);
+            }
         }
 
         Toast.makeText(this, "USSD processing paused. Will resume at 6:00 AM", Toast.LENGTH_LONG).show();
     }
+
 
     private long calculateMidnightMillis(long currentTimeMillis) {
         long midnightMillis = currentTimeMillis - (currentTimeMillis % DateUtils.DAY_IN_MILLIS)
@@ -508,8 +526,24 @@ public class HomeActivity extends AppCompatActivity {
         int currentHour = Integer.parseInt(android.text.format.DateFormat.format("H", System.currentTimeMillis()).toString());
 
         // Check if the current hour is within the allowed time range (6:00 AM to 11:59 PM)
-        return currentHour >= MORNING_HOUR && currentHour < MIDNIGHT_HOUR;
+        boolean isWithinAllowedTimeRange = currentHour >= MORNING_HOUR && currentHour < MIDNIGHT_HOUR;
+
+        // Toggle airplane mode accordingly
+        if (isWithinAllowedTimeRange) {
+            // Enable airplane mode at 23:59 PM
+            if (currentHour == MIDNIGHT_HOUR - 1) {
+                AirplaneModeUtils.enableAirplaneMode(this);
+            }
+        } else {
+            // Disable airplane mode at 6:00 AM
+            if (currentHour == MORNING_HOUR) {
+                AirplaneModeUtils.disableAirplaneMode(this);
+            }
+        }
+
+        return isWithinAllowedTimeRange;
     }
+
 
 
     @Override
