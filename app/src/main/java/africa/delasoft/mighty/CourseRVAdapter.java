@@ -1,5 +1,6 @@
 package africa.delasoft.mighty;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -51,7 +52,17 @@ public class CourseRVAdapter extends ListAdapter<PhoneNumber, CourseRVAdapter.Vi
         // below line of code is use to set data to
         // each item of our recycler view.
         PhoneNumber model = getCourseAt(position);
-        holder.courseNameTV.setText("#Inc "+model.getId());
+
+
+        String phoneNumber = model.getPhoneNumber();
+        if (phoneNumber != null && phoneNumber.length() >= 6) {
+            String firstSixDigits = phoneNumber.substring(0, 6);
+            holder.courseNameTV.setText("#Inc "+model.getId() +" : "+firstSixDigits);
+        }else{
+            holder.courseNameTV.setText("#Inc "+model.getId());
+        }
+
+
     }
 
     // creating a method to get course modal for a specific position.

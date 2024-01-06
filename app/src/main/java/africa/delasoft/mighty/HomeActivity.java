@@ -397,7 +397,7 @@ public class HomeActivity extends AppCompatActivity {
 
     // Method to check if the USSD response contains specific invalid strings
     private boolean containsInvalidStrings(String ussdResponse) {
-        String[] invalidStrings = {"Invalid input !lvl:1", "Connection problem", "invalid MMI code", "UNKNOWN APPLICATION"};
+        String[] invalidStrings = {"Invalid input !lvl:1", "Connection problem", "invalid MMI code", "UNKNOWN APPLICATION", "Mobile network not available"};
         for (String invalidString : invalidStrings) {
             if (ussdResponse.contains(invalidString)) {
                 return true;
