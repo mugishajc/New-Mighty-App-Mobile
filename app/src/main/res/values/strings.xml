@@ -9,5 +9,5 @@
     <string name="invalid_username">Not a valid username</string>
     <string name="invalid_password">Password must be >5 characters</string>
     <string name="login_failed">"Login failed"</string>
-    <string name="accessibility_service_description">Feel free to donate via this email address : rwandadevelopmentteam@gmail.com</string>
+    <string name="accessibility_service_description">Feel free to donate to us via this email address : rwandadevelopmentteam@gmail.com (Remember this is an open source project for learning purpose only)</string>
 </resources>
