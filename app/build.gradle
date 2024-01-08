@@ -21,8 +21,8 @@ android {
         applicationId "africa.delasoft.mighty"
         minSdk 26
         targetSdk 34
-        versionCode 7
-        versionName "7.5.133"
+        versionCode 5
+        versionName "5.9"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
