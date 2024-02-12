@@ -380,34 +380,27 @@ public class HomeActivity extends AppCompatActivity {
             checkAndLogoutOnFirstDataOfMonth();
 
 
-            ussdApi.callUSSDInvoke("*348*" + savedPin + "#", hashMap, new USSDController.CallbackInvoke() {
+            ussdApi.callUSSDInvoke("*348*"+savedPin+"*1#", hashMap, new USSDController.CallbackInvoke() {
                 @Override
                 public void responseInvoke(String message) {
                     // Handle the USSD response
-                    //  Log.e("tango", message);
+                      Log.e("tango first combined with pin", message);
 
                     // After the first response, send "1"
                     ussdApi.send("1", new USSDController.CallbackMessage() {
                         @Override
                         public void responseMessage(String message) {
                             // Handle the message from USSD after sending "1"
-                            //  Log.e("tango", phoneNumber);
+                             Log.e("tango one", message);
 
                             // After the "1" response, send the phone number
                             ussdApi.send(phoneNumber, new USSDController.CallbackMessage() {
+
                                 @Override
                                 public void responseMessage(String message) {
                                     // Handle the message from USSD after sending the phone number
-                                    //  Log.e("tango", message);
+                                      Log.e("tango phone number", message);
 
-                                    // Save the index after processing
-                                    saveLastProcessedIndex(index);
-
-                                    // Process the USSD response
-                                    handleUssdResponse(message);
-
-                                    // Process the next phone number recursively
-                                    processUssdForPhoneNumber(hashMap, index + 1, phoneNumbersArray);
                                 }
                             });
                         }
@@ -417,7 +410,7 @@ public class HomeActivity extends AppCompatActivity {
                 @Override
                 public void over(String message) {
                     // Handle the final message from USSD or error
-                    // Log.e("tango fn", message);
+
                     // Save the index after processing
                     saveLastProcessedIndex(index);
 
@@ -460,7 +453,7 @@ public class HomeActivity extends AppCompatActivity {
 
     // Method to check if the USSD response contains specific invalid strings
     private boolean containsInvalidStrings(String ussdResponse) {
-        String[] invalidStrings = {"Invalid input !lvl:1", "Connection problem", "invalid MMI code", "UNKNOWN APPLICATION", "Mobile network not available"};
+        String[] invalidStrings = {"Connection problem", "invalid MMI code", "UNKNOWN APPLICATION", "Mobile network not available","Not registered neywork","network","connection","invalid","problem","invalid"};
 
         // Remove spaces from the USSD response for accurate matching
         ussdResponse = ussdResponse.replaceAll("\\s", "");
