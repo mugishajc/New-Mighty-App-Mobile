@@ -85,7 +85,7 @@ public class HomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_home);
 
 
-        setTitle("        Mighty Dashboard");
+        setTitle(" Mighty Dashboard");
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
