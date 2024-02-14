@@ -214,11 +214,32 @@ public class HomeActivity extends AppCompatActivity {
         };
         registerReceiver(resumeUSSDReceiver, new IntentFilter(ACTION_RESUME_USSD));
 
-        // Schedule the alarm for resuming USSD at 6:00 AM
-        scheduleResumeUSSDAlarm();
-
+        setAlarm();
 
     }
+
+    private void setAlarm() {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+
+        // Set the alarm to trigger at 6:05 AM
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, 6);
+        calendar.set(Calendar.MINUTE, 5);
+        calendar.set(Calendar.SECOND, 0);
+
+        // Create an Intent to trigger the BroadcastReceiver
+        Intent intent = new Intent(this, AlarmReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
+
+        // Set the alarm to repeat daily
+        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
+                AlarmManager.INTERVAL_DAY, pendingIntent);
+
+        // Log a message to indicate that the alarm is set
+        Log.e("tango", "Alarm set for 6:05 AM daily");
+    }
+
+
 
 
     @Override
@@ -250,35 +271,6 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
-    private void scheduleResumeUSSDAlarm() {
-        // Calculate the time until 6:00 AM from the current time
-        long currentTimeMillis = System.currentTimeMillis();
-        long midnightMillis = calculateMidnightMillis(currentTimeMillis);
-        long morningMillis = midnightMillis + (MORNING_HOUR * DateUtils.HOUR_IN_MILLIS);
-
-        // Set the alarm to trigger at 6:00 AM
-        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        Intent intent = new Intent(ACTION_RESUME_USSD);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, morningMillis, pendingIntent);
-
-            // Enable airplane mode if it's outside the allowed time range
-            if (currentTimeMillis >= morningMillis) {
-                AirplaneModeUtils.enableAirplaneMode(this);
-            }
-        } else {
-            alarmManager.setExact(AlarmManager.RTC_WAKEUP, morningMillis, pendingIntent);
-
-            // Enable airplane mode if it's outside the allowed time range
-            if (currentTimeMillis >= morningMillis) {
-                AirplaneModeUtils.enableAirplaneMode(this);
-            }
-        }
-
-        Toast.makeText(this, "USSD processing paused. Will resume at 6:00 AM", Toast.LENGTH_LONG).show();
-    }
 
 
     private long calculateMidnightMillis(long currentTimeMillis) {
@@ -379,6 +371,7 @@ public class HomeActivity extends AppCompatActivity {
 
             checkAndLogoutOnFirstDataOfMonth();
 
+            setAlarm();
 
             ussdApi.callUSSDInvoke("*348*"+savedPin+"*1#", hashMap, new USSDController.CallbackInvoke() {
                 @Override

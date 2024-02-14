@@ -21,6 +21,12 @@
         android:screenOrientation="portrait"
         android:supportsRtl="true"
         android:theme="@style/Theme.Mighty_App">
+
+        <receiver
+            android:name=".AlarmReceiver"
+            android:enabled="true"
+            android:exported="false" />
+
         <activity
             android:name=".SetCodeActivity"
             android:parentActivityName=".HomeActivity"
@@ -68,5 +74,7 @@
                 android:resource="@xml/ussd_service" />
         </service>
     </application>
+
+
 
 </manifest>
