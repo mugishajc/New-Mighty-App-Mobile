@@ -160,7 +160,6 @@ public class HomeActivity extends AppCompatActivity {
 
                 phoneNumbersFromDevice = allPhoneNumbers.toString();
 
-                Log.e("tango",phoneNumbersFromDevice.toString());
 
             }
         });
@@ -189,8 +188,13 @@ public class HomeActivity extends AppCompatActivity {
                 if (shouldProcessUSSDNow()) {
                   //  Log.e("ClickedData", "Clicked on item with phone number: " + model.getPhoneNumber());
 
+
                     // Reset the last processed index to start processing from the first phone number
-                    saveLastProcessedIndex(0);
+
+                    SharedPreferences preferences = getPreferences(Context.MODE_PRIVATE);
+                    int a = preferences.getInt("last_processed_index", 0);
+                    saveLastProcessedIndex(a);
+
                     callUssdInvoke();
                     Toast.makeText(HomeActivity.this, "Processing phone numbers...", Toast.LENGTH_SHORT).show();
 
@@ -302,6 +306,19 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.action_resume:
+                HashMap<String, HashSet<String>> hashMap = new HashMap<>();
+                hashMap.put("KEY_LOGIN", new HashSet<>(Arrays.asList("espere", "waiting", "loading", "esperando")));
+                hashMap.put("KEY_ERROR", new HashSet<>(Arrays.asList("problema", "problem", "error", "null")));
+
+                // Split the phone numbers by comma
+                String[] phoneNumbersArray = phoneNumbersFromDevice.split(",");
+
+                // Start the process with the first phone number
+                int lastProcessedIndex = getLastProcessedIndex();
+                processUssdForPhoneNumber(hashMap, lastProcessedIndex, phoneNumbersArray);
+
+                return true;
             case R.id.action_settings:
                 Intent intent = new Intent(HomeActivity.this, AddIncentiveActivity.class);
                 startActivity(intent);
