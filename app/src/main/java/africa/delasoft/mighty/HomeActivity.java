@@ -160,6 +160,8 @@ public class HomeActivity extends AppCompatActivity {
 
                 phoneNumbersFromDevice = allPhoneNumbers.toString();
 
+                Log.e("tango",phoneNumbersFromDevice.toString());
+
             }
         });
         // below method is use to add swipe to delete method for item of recycler view.
@@ -404,16 +406,20 @@ public class HomeActivity extends AppCompatActivity {
                 public void over(String message) {
                     // Handle the final message from USSD or error
 
+
+                    Log.e("tango11",message.toString()+"\n"+index);
+
                     // Save the index after processing
                     saveLastProcessedIndex(index);
 
 
-                    // Process the USSD response
-                    handleUssdResponse(message);
-
-
                     // Process the next phone number recursively
                     processUssdForPhoneNumber(hashMap, index + 1, phoneNumbersArray);
+
+
+
+                    // Process the USSD response
+                   // handleUssdResponse(message);
 
                 }
             });
