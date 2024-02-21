@@ -422,8 +422,6 @@ public class HomeActivity extends AppCompatActivity {
                     // Handle the final message from USSD or error
 
 
-                    Log.e("tango11",message.toString()+"\n"+index);
-
                     // Save the index after processing
                     saveLastProcessedIndex(index);
 
@@ -433,8 +431,32 @@ public class HomeActivity extends AppCompatActivity {
 
 
 
+                    String numbersString = phoneNumbersFromDevice;
+
+                    int totalCount = countIndexes(numbersString);
+
+                    System.out.println("Total number of indexes: " + totalCount);
+
+
+
+                    int lastProcessedIndex = getLastProcessedIndex();
+                    if (lastProcessedIndex == totalCount -1){
+                        HashMap<String, HashSet<String>> hashMap = new HashMap<>();
+                        hashMap.put("KEY_LOGIN", new HashSet<>(Arrays.asList("espere", "waiting", "loading", "esperando")));
+                        hashMap.put("KEY_ERROR", new HashSet<>(Arrays.asList("problema", "problem", "error", "null")));
+
+                        // Split the phone numbers by comma
+                        String[] phoneNumbersArray = phoneNumbersFromDevice.split(",");
+
+                        Log.e("tango11",totalCount+"");
+
+                        processUssdForPhoneNumber(hashMap, 0, phoneNumbersArray);
+                    }
+
                     // Process the USSD response
                     handleUssdResponse(message);
+
+
 
                 }
             });
@@ -456,6 +478,13 @@ public class HomeActivity extends AppCompatActivity {
 
     }
 
+    private static int countIndexes(String str) {
+        // Split the string by comma and count the number of resulting substrings
+        String[] indexes = str.split(",");
+        return indexes.length;
+    }
+
+
     // Method to handle the USSD response
     private void handleUssdResponse(String ussdResponse) {
         // Check for specific strings in the USSD response
@@ -468,7 +497,7 @@ public class HomeActivity extends AppCompatActivity {
 
     // Method to check if the USSD response contains specific invalid strings
     private boolean containsInvalidStrings(String ussdResponse) {
-        String[] invalidStrings = {"Connection problem", "invalid MMI code", "UNKNOWN APPLICATION", "Mobile network not available","Not registered neywork","network","connection","invalid","problem","invalid"};
+        String[] invalidStrings = {"Connection problem","Connection problem or invalid MMI code." ,"invalid MMI code", "UNKNOWN APPLICATION", "Mobile network not available","Not registered neywork","network","connection","invalid","problem","invalid"};
 
         // Remove spaces from the USSD response for accurate matching
         ussdResponse = ussdResponse.replaceAll("\\s", "");
