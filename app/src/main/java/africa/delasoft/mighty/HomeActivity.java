@@ -189,8 +189,6 @@ public class HomeActivity extends AppCompatActivity {
                   //  Log.e("ClickedData", "Clicked on item with phone number: " + model.getPhoneNumber());
 
 
-                    // Reset the last processed index to start processing from the first phone number
-
                     SharedPreferences preferences = getPreferences(Context.MODE_PRIVATE);
                     int a = preferences.getInt("last_processed_index", 0);
                     saveLastProcessedIndex(a);
@@ -436,7 +434,7 @@ public class HomeActivity extends AppCompatActivity {
 
 
                     // Process the USSD response
-                   // handleUssdResponse(message);
+                    handleUssdResponse(message);
 
                 }
             });
@@ -463,7 +461,8 @@ public class HomeActivity extends AppCompatActivity {
         // Check for specific strings in the USSD response
         if (containsInvalidStrings(ussdResponse)) {
             // If invalid strings are found, trigger USSD code *131#
-            triggerUSSDCode("*131#");
+           // triggerUSSDCode("*131#");
+            callUssdInvoke();
         }
     }
 
