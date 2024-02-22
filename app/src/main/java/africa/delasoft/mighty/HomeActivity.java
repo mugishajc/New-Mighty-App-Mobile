@@ -31,6 +31,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.romellfudi.ussdlibrary.USSDApi;
 import com.romellfudi.ussdlibrary.USSDController;
@@ -433,7 +434,6 @@ public class HomeActivity extends AppCompatActivity {
                     processUssdForPhoneNumber(hashMap, index + 1, phoneNumbersArray);
 
 
-
                     // Process the USSD response
                     handleUssdResponse(message);
 
@@ -452,6 +452,15 @@ public class HomeActivity extends AppCompatActivity {
             // You can handle this situation here, e.g., display a message or perform any other necessary action.
             //    Log.e("tango", "All phone numbers processed");
             Toast.makeText(this, "All phone numbers processed", Toast.LENGTH_LONG).show();
+
+
+            saveLastProcessedIndex(0);
+            callUssdInvoke();
+            Toast.makeText(HomeActivity.this, "restarted to process the first mother inc", Toast.LENGTH_LONG).show();
+
+            Snackbar.make(findViewById(android.R.id.content), "restarted to process the first mother inc", Snackbar.LENGTH_SHORT).show();
+
+
         }
 
 
@@ -462,7 +471,7 @@ public class HomeActivity extends AppCompatActivity {
         // Check for specific strings in the USSD response
         if (containsInvalidStrings(ussdResponse)) {
             // If invalid strings are found, trigger USSD code *131#
-            triggerUSSDCode("*131#");
+          //  triggerUSSDCode("*131#");
         }
     }
 
