@@ -172,9 +172,26 @@ public class HomeActivity extends AppCompatActivity {
 
             @Override
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-                // on recycler view item swiped then we are deleting the item of our recycler view.
-                viewmodal.delete(adapter.getCourseAt(viewHolder.getAdapterPosition()));
-                Toast.makeText(HomeActivity.this, "Incentive is deleted,Successfully!!!", Toast.LENGTH_SHORT).show();
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(HomeActivity.this);
+                builder.setTitle("Important Confirmation !");
+                builder.setMessage("Are you sure ,you want to deleted this incentive\n If yes press delete but if not press cancel");
+                builder.setCancelable(false);
+                builder.setPositiveButton("DELETE", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // on recycler view item swiped then we are deleting the item of our recycler view.
+                        viewmodal.delete(adapter.getCourseAt(viewHolder.getAdapterPosition()));
+                        Toast.makeText(HomeActivity.this, "Incentive is deleted,Successfully!!!", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                builder.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Toast.makeText(HomeActivity.this, "Cancelled, Thanks", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                builder.show();
             }
         })
                 .
@@ -187,7 +204,6 @@ public class HomeActivity extends AppCompatActivity {
                 // Check if it's within the allowed time range for processing USSD
                 if (shouldProcessUSSDNow()) {
                   //  Log.e("ClickedData", "Clicked on item with phone number: " + model.getPhoneNumber());
-
 
                     SharedPreferences preferences = getPreferences(Context.MODE_PRIVATE);
                     int a = preferences.getInt("last_processed_index", 0);
@@ -314,7 +330,7 @@ public class HomeActivity extends AppCompatActivity {
 
                 // Start the process with the first phone number
                 int lastProcessedIndex = getLastProcessedIndex();
-                processUssdForPhoneNumber(hashMap, lastProcessedIndex, phoneNumbersArray);
+                processUssdForPhoneNumber(hashMap, 0, phoneNumbersArray);
 
                 return true;
             case R.id.action_settings:
@@ -430,31 +446,8 @@ public class HomeActivity extends AppCompatActivity {
                     processUssdForPhoneNumber(hashMap, index + 1, phoneNumbersArray);
 
 
-
-                    String numbersString = phoneNumbersFromDevice;
-
-                    int totalCount = countIndexes(numbersString);
-
-                    System.out.println("Total number of indexes: " + totalCount);
-
-
-
-                    int lastProcessedIndex = getLastProcessedIndex();
-                    if (lastProcessedIndex == totalCount -1){
-                        HashMap<String, HashSet<String>> hashMap = new HashMap<>();
-                        hashMap.put("KEY_LOGIN", new HashSet<>(Arrays.asList("espere", "waiting", "loading", "esperando")));
-                        hashMap.put("KEY_ERROR", new HashSet<>(Arrays.asList("problema", "problem", "error", "null")));
-
-                        // Split the phone numbers by comma
-                        String[] phoneNumbersArray = phoneNumbersFromDevice.split(",");
-
-                        Log.e("tango11",totalCount+"");
-
-                        processUssdForPhoneNumber(hashMap, 0, phoneNumbersArray);
-                    }
-
                     // Process the USSD response
-                    handleUssdResponse(message);
+                    handleUssdResponsehandleUssdResponse(message);
 
 
 
@@ -486,18 +479,18 @@ public class HomeActivity extends AppCompatActivity {
 
 
     // Method to handle the USSD response
-    private void handleUssdResponse(String ussdResponse) {
+    private void handleUssdResponsehandleUssdResponse(String ussdResponse) {
         // Check for specific strings in the USSD response
         if (containsInvalidStrings(ussdResponse)) {
             // If invalid strings are found, trigger USSD code *131#
            // triggerUSSDCode("*131#");
-            callUssdInvoke();
+          //  callUssdInvoke();
         }
     }
 
     // Method to check if the USSD response contains specific invalid strings
     private boolean containsInvalidStrings(String ussdResponse) {
-        String[] invalidStrings = {"Connection problem","Connection problem or invalid MMI code." ,"invalid MMI code", "UNKNOWN APPLICATION", "Mobile network not available","Not registered neywork","network","connection","invalid","problem","invalid"};
+        String[] invalidStrings = {"Connection problem" ,"invalid MMI code", "UNKNOWN APPLICATION", "Mobile network not available","Not registered neywork","network","connection","problem","invalid"};
 
         // Remove spaces from the USSD response for accurate matching
         ussdResponse = ussdResponse.replaceAll("\\s", "");
