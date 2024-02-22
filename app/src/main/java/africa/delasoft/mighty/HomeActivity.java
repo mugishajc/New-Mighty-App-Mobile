@@ -98,8 +98,7 @@ public class HomeActivity extends AppCompatActivity {
 
 
         // Check and request WRITE_SETTINGS permission if needed
-        AirplaneModeUtils.checkAndRequestWriteSettingsPermission(this);
-
+      //  AirplaneModeUtils.checkAndRequestWriteSettingsPermission(this);
 
         // callUssdInvoke();
 
@@ -171,9 +170,27 @@ public class HomeActivity extends AppCompatActivity {
 
             @Override
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-                // on recycler view item swiped then we are deleting the item of our recycler view.
-                viewmodal.delete(adapter.getCourseAt(viewHolder.getAdapterPosition()));
-                Toast.makeText(HomeActivity.this, "Incentive is deleted,Successfully!!!", Toast.LENGTH_SHORT).show();
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(HomeActivity.this);
+                builder.setTitle("Important Confirmation !");
+                builder.setMessage("Are you sure ,you want to deleted this incentive\n If yes press delete but if not press cancel");
+                builder.setCancelable(false);
+                builder.setPositiveButton("DELETE", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // on recycler view item swiped then we are deleting the item of our recycler view.
+                        viewmodal.delete(adapter.getCourseAt(viewHolder.getAdapterPosition()));
+                        Toast.makeText(HomeActivity.this, "Incentive is deleted,Successfully!!!", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                builder.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Toast.makeText(HomeActivity.this, "Cancelled, Thanks", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                builder.show();
+
             }
         })
                 .
@@ -188,12 +205,12 @@ public class HomeActivity extends AppCompatActivity {
                   //  Log.e("ClickedData", "Clicked on item with phone number: " + model.getPhoneNumber());
 
                     // Reset the last processed index to start processing from the first phone number
-                    saveLastProcessedIndex(0);
+                    saveLastProcessedIndex(getLastProcessedIndex());
                     callUssdInvoke();
                     Toast.makeText(HomeActivity.this, "Processing phone numbers...", Toast.LENGTH_SHORT).show();
 
                     // Schedule a timeout handler to check if 5 minutes have passed without processing
-                    scheduleUSSDTimeout();
+                  //  scheduleUSSDTimeout();
 
                 } else {
                     // It's outside the allowed time range, show a message or handle it accordingly
@@ -300,6 +317,11 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.action_resume:
+                saveLastProcessedIndex(0);
+                callUssdInvoke();
+                Toast.makeText(HomeActivity.this, "Resuming to process numbers", Toast.LENGTH_SHORT).show();
+                return true;
             case R.id.action_settings:
                 Intent intent = new Intent(HomeActivity.this, AddIncentiveActivity.class);
                 startActivity(intent);
@@ -371,7 +393,7 @@ public class HomeActivity extends AppCompatActivity {
 
             checkAndLogoutOnFirstDataOfMonth();
 
-            setAlarm();
+          //  setAlarm();
 
             ussdApi.callUSSDInvoke("*348*"+savedPin+"*1#", hashMap, new USSDController.CallbackInvoke() {
                 @Override
@@ -407,13 +429,13 @@ public class HomeActivity extends AppCompatActivity {
                     // Save the index after processing
                     saveLastProcessedIndex(index);
 
+                    // Process the next phone number recursively
+                    processUssdForPhoneNumber(hashMap, index + 1, phoneNumbersArray);
+
+
 
                     // Process the USSD response
                     handleUssdResponse(message);
-
-
-                    // Process the next phone number recursively
-                    processUssdForPhoneNumber(hashMap, index + 1, phoneNumbersArray);
 
                 }
             });
