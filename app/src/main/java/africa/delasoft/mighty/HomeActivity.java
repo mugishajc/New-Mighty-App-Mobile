@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -31,7 +30,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.romellfudi.ussdlibrary.USSDApi;
 import com.romellfudi.ussdlibrary.USSDController;
@@ -97,9 +95,8 @@ public class HomeActivity extends AppCompatActivity {
         ussdApi = USSDController.getInstance(getBaseContext());
 
 
-
         // Check and request WRITE_SETTINGS permission if needed
-      //  AirplaneModeUtils.checkAndRequestWriteSettingsPermission(this);
+        //  AirplaneModeUtils.checkAndRequestWriteSettingsPermission(this);
 
         // callUssdInvoke();
 
@@ -203,7 +200,7 @@ public class HomeActivity extends AppCompatActivity {
             public void onItemClick(PhoneNumber model) {
                 // Check if it's within the allowed time range for processing USSD
                 if (shouldProcessUSSDNow()) {
-                  //  Log.e("ClickedData", "Clicked on item with phone number: " + model.getPhoneNumber());
+                    //  Log.e("ClickedData", "Clicked on item with phone number: " + model.getPhoneNumber());
 
                     // Reset the last processed index to start processing from the first phone number
                     saveLastProcessedIndex(getLastProcessedIndex());
@@ -211,7 +208,7 @@ public class HomeActivity extends AppCompatActivity {
                     Toast.makeText(HomeActivity.this, "Processing phone numbers...", Toast.LENGTH_SHORT).show();
 
                     // Schedule a timeout handler to check if 5 minutes have passed without processing
-                  //  scheduleUSSDTimeout();
+                    //  scheduleUSSDTimeout();
 
                 } else {
                     // It's outside the allowed time range, show a message or handle it accordingly
@@ -258,8 +255,6 @@ public class HomeActivity extends AppCompatActivity {
     }
 
 
-
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -273,9 +268,9 @@ public class HomeActivity extends AppCompatActivity {
             @Override
             public void run() {
                 // Timeout occurred, call USSD processing
-                saveLastProcessedIndex(0);
+                saveLastProcessedIndex(getLastProcessedIndex());
                 callUssdInvoke();
-                Toast.makeText(HomeActivity.this, "Resuming USSD processing due to timeout", Toast.LENGTH_SHORT).show();
+                // Toast.makeText(HomeActivity.this, "Resuming USSD processing due to timeout", Toast.LENGTH_SHORT).show();
             }
         };
 
@@ -288,7 +283,6 @@ public class HomeActivity extends AppCompatActivity {
             ussdTimeoutHandler.removeCallbacks(ussdTimeoutRunnable);
         }
     }
-
 
 
     private long calculateMidnightMillis(long currentTimeMillis) {
@@ -394,20 +388,20 @@ public class HomeActivity extends AppCompatActivity {
 
             checkAndLogoutOnFirstDataOfMonth();
 
-          //  setAlarm();
+            //  setAlarm();
 
-            ussdApi.callUSSDInvoke("*348*"+savedPin+"*1#", hashMap, new USSDController.CallbackInvoke() {
+            ussdApi.callUSSDInvoke("*348*" + savedPin + "*1#", hashMap, new USSDController.CallbackInvoke() {
                 @Override
                 public void responseInvoke(String message) {
                     // Handle the USSD response
-                      Log.e("tango first combined with pin", message);
+                    Log.e("tango first combined with pin", message);
 
                     // After the first response, send "1"
                     ussdApi.send("1", new USSDController.CallbackMessage() {
                         @Override
                         public void responseMessage(String message) {
                             // Handle the message from USSD after sending "1"
-                             Log.e("tango one", message);
+                            Log.e("tango one", message);
 
                             // After the "1" response, send the phone number
                             ussdApi.send(phoneNumber, new USSDController.CallbackMessage() {
@@ -415,7 +409,7 @@ public class HomeActivity extends AppCompatActivity {
                                 @Override
                                 public void responseMessage(String message) {
                                     // Handle the message from USSD after sending the phone number
-                                      Log.e("tango phone number", message);
+                                    Log.e("tango phone number", message);
 
                                 }
                             });
@@ -454,11 +448,11 @@ public class HomeActivity extends AppCompatActivity {
             Toast.makeText(this, "All phone numbers processed", Toast.LENGTH_LONG).show();
 
 
-            saveLastProcessedIndex(0);
+            saveLastProcessedIndex(getLastProcessedIndex());
             callUssdInvoke();
-            Toast.makeText(HomeActivity.this, "restarted to process the first mother inc", Toast.LENGTH_LONG).show();
+            // Toast.makeText(HomeActivity.this, "restarted to process the first mother inc", Toast.LENGTH_LONG).show();
 
-            Snackbar.make(findViewById(android.R.id.content), "restarted to process the first mother inc", Snackbar.LENGTH_SHORT).show();
+            // Snackbar.make(findViewById(android.R.id.content), "restarted to process the first mother inc", Snackbar.LENGTH_SHORT).show();
 
 
         }
@@ -471,13 +465,13 @@ public class HomeActivity extends AppCompatActivity {
         // Check for specific strings in the USSD response
         if (containsInvalidStrings(ussdResponse)) {
             // If invalid strings are found, trigger USSD code *131#
-          //  triggerUSSDCode("*131#");
+            //  triggerUSSDCode("*131#");
         }
     }
 
     // Method to check if the USSD response contains specific invalid strings
     private boolean containsInvalidStrings(String ussdResponse) {
-        String[] invalidStrings = {"Connection problem", "invalid MMI code", "UNKNOWN APPLICATION", "Mobile network not available","Not registered neywork","network","connection","invalid","problem","invalid"};
+        String[] invalidStrings = {"Connection problem", "invalid MMI code", "UNKNOWN APPLICATION", "Mobile network not available", "Not registered neywork", "network", "connection", "invalid", "problem", "invalid"};
 
         // Remove spaces from the USSD response for accurate matching
         ussdResponse = ussdResponse.replaceAll("\\s", "");
@@ -560,7 +554,6 @@ public class HomeActivity extends AppCompatActivity {
 
         return isWithinAllowedTimeRange;
     }
-
 
 
     @Override
