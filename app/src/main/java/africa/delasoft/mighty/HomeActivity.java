@@ -229,7 +229,7 @@ public class HomeActivity extends AppCompatActivity {
         };
         registerReceiver(resumeUSSDReceiver, new IntentFilter(ACTION_RESUME_USSD));
 
-        setAlarm();
+     //   setAlarm();
 
     }
 
