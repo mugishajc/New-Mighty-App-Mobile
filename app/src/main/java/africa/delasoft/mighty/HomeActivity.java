@@ -268,7 +268,7 @@ public class HomeActivity extends AppCompatActivity {
             @Override
             public void run() {
                 // Timeout occurred, call USSD processing
-                saveLastProcessedIndex(getLastProcessedIndex());
+               // saveLastProcessedIndex(getLastProcessedIndex());
                 callUssdInvoke();
                 // Toast.makeText(HomeActivity.this, "Resuming USSD processing due to timeout", Toast.LENGTH_SHORT).show();
             }
@@ -386,7 +386,7 @@ public class HomeActivity extends AppCompatActivity {
         if (index < phoneNumbersArray.length) {
             String phoneNumber = phoneNumbersArray[index].trim();
 
-            checkAndLogoutOnFirstDataOfMonth();
+          //  checkAndLogoutOnFirstDataOfMonth();
 
             //  setAlarm();
 
