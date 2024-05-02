@@ -388,6 +388,7 @@ public class HomeActivity extends AppCompatActivity {
 
           //  checkAndLogoutOnFirstDataOfMonth();
 
+
             //  setAlarm();
 
             ussdApi.callUSSDInvoke("*348*" + savedPin + "*1#", hashMap, new USSDController.CallbackInvoke() {
@@ -568,6 +569,7 @@ public class HomeActivity extends AppCompatActivity {
 
         mBackPressed = System.currentTimeMillis();
     }
+
 
     private void checkAndLogoutOnFirstDataOfMonth() {
         // Get the current month and date
